@@ -7,7 +7,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 
 ===== */ 
 
-/* =====  version 17.0.33 ===== */ 
+/* =====  version 17.0.34 ===== */ 
 
 /* ===== equalize ===== */
 

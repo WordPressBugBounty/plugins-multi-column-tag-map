@@ -8,7 +8,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 
 ===== */ 
 	
-	/* =====  version 17.0.33 ===== */ 
+	/* =====  version 17.0.34 ===== */ 
 	
 	/* ** for anyone looking at the source, yes I leave in a lot of comments and print_r ;) ** */
 
@@ -75,7 +75,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 	
 
 
-$mctagmapVersionNumber = "17.0.33";
+$mctagmapVersionNumber = "17.0.34";
 $mctagmapCSSpath = $_SERVER['DOCUMENT_ROOT'].parse_url(get_stylesheet_directory_uri(), PHP_URL_PATH);
 $mctmarr = get_option('mctagmapoptions');
 
@@ -127,7 +127,7 @@ $mctmarr = get_option('mctagmapoptions');
 	if($show_empty == "no"){
 		$show_empty = "1";
 	}
-	
+	$width = esc_attr($width);
 	if($width){
 		if(is_numeric($width)){
 			$tugPPTwidth = "style=\"width: ". $width ."px;\"";
@@ -808,19 +808,19 @@ function mctm_hierarchical_term_tree($category = 0){
 			/* ===== exclude tags ===== */ 
 			if(isset($tag->$arraypart)){	
 				/* name_divider as array - 05.03.2024 */
+				$nd = explode(',',preg_replace('/\s*,\s*/', ',', $name_divider));
 				if ($name_divider != '') {
-					$nd = explode(',',preg_replace('/\s*,\s*/', ',', $name_divider));
 					foreach($nd as $ndArray) {
-						if (stripos($tag->$arraypart, $ndArray) !== false){
-							$tag->$arraypart = preg_replace("/\s*([\\".$name_divider."])\s*/", "$1", $tag->$arraypart);
+						if (stripos($tag->post_title, $ndArray) !== false){
+							$tag->$arraypart = preg_replace("/\s*([\\".$name_divider."])\s*/", "$1", $tag->post_title);
 							$tagParts = explode($ndArray, $tag->$arraypart);
-							$tag->$arraypart = trim($tagParts[1]).', '.trim($tagParts[0]);
+							$tag->$arraypart = $tagParts[1].', '.$tagParts[0];
 							$has_name_divider = 1;
 						}
 					}
 				}			
+				$td = explode(',',preg_replace('/\s*,\s*/', ',', $title_divider));
 				if ($title_divider != '') {
-					$td = explode(',',preg_replace('/\s*,\s*/', ',', $title_divider));
 					$fw = strtok($tag->$arraypart, ' ');
 					if (in_array($fw, $td)) {
 						$tag->$arraypart = $tag->$arraypart;
@@ -943,17 +943,15 @@ function mctm_hierarchical_term_tree($category = 0){
 			//print_r($sort_by);
 			$temp_arr = array();
 			foreach ($sort_by as $key) {
-				if(array_key_exists($key, $groups)){
-					if(is_array($groups[$key])){
-						$temp_arr[$key] = $groups[$key];
-					}
+				if(is_array($groups[$key])){
+					$temp_arr[$key] = $groups[$key];
 				}
 				/* un comment for prod! */
 			}
 			$alpha_groups = $temp_arr;
 			//print_r($alpha_groups);
 		}
-		$non_alpha_groups = array_diff_key($groups, $alpha_groups);
+		$non_alpha_groups = array_diff_assoc($groups, $alpha_groups);
 		if($sort_alpha_extras == 'yes'){
 			$groups = $alpha_groups+$non_alpha_groups;
 		} else {
@@ -963,13 +961,6 @@ function mctm_hierarchical_term_tree($category = 0){
 				$groups = $groups;
 			}
 		}
-		if($sort_alpha_extras == 'last'){
-			$num_array = array_filter($alpha_groups, function($key) {
-			  return is_numeric($key);
-			}, ARRAY_FILTER_USE_KEY);
-			$new_alpha = array_diff_key($alpha_groups, $num_array);
-			$groups = $new_alpha+$num_array+$non_alpha_groups;
-		} 
 		if($sort_alpha_numbers == 'no'){
 			foreach ($groups as $key => $value) {
 				if (is_int($key)) {
@@ -985,7 +976,7 @@ function mctm_hierarchical_term_tree($category = 0){
 
 		
 		/* ==== resort numbers so 0 doesn't mess it all up ==== */
-		if($numbers_first != "yes" && $sort_alpha_extras != 'last'){
+		if($numbers_first != "yes"){
 			foreach ($groups as $key => $value) {
 				if(is_int($key) || preg_match('[pL]', $key)){ /* \W */
 					if(preg_match('[\pL]', $key)){
@@ -1082,7 +1073,7 @@ function mctm_hierarchical_term_tree($category = 0){
 				if($multi_page == "yes"){
 					$list .= '<a href="?mctm-page='.mb_strtoupper($fl).'">'.$fl.$flc.'</a>'."\n";
 				} else {
-					$list .= '<a href="#mctm-mctmcounter-'.mb_strtoupper(htmlentities($fl)).'">'.htmlentities($fl).htmlentities($flc).'</a>'."\n";
+					$list .= '<a href="#mctm-mctmcounter-'.mb_strtoupper($fl).'">'.$fl.$flc.'</a>'."\n";
 				}
 			}
 			$list .= '</div>'."\n";
@@ -1230,7 +1221,7 @@ function mctm_hierarchical_term_tree($category = 0){
 				}
 			}
 			//$list .='<h4 id="mctm-mctmcounter-'.strtoupper($letter).'">' . apply_filters( 'the_title', $letter, '' ) .$flc.'</h4>';
-			$list .='<h4 id="mctm-mctmcounter-'.strtoupper(htmlentities($letter)).'">' . $letter .$flc.'</h4>';
+			$list .='<h4 id="mctm-mctmcounter-'.strtoupper($letter).'">' . $letter .$flc.'</h4>';
 			$list .="\n";
 			$list .= '<ul class="links">';
 			$list .="\n";			
@@ -1381,7 +1372,7 @@ function mctm_hierarchical_term_tree($category = 0){
 						//$name = apply_filters( 'the_title', $tag->first_word.' '.$tap[0].$arraypart2, '' );
 						$name = $tag->first_word.' '.$tap[0].$arraypart2;
 					}
-					$name = htmlspecialchars($name);
+					
 					/* =====  show descriptions / excerpts ===== */ 
 					if($descriptions == "yes"){
 						$mctagmap_description = '<span class="tagDescription">' . $tag->description . '</span>';
