@@ -8,7 +8,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 
 ===== */ 
 	
-	/* =====  version 17.0.34 ===== */ 
+	/* =====  version 17.0.35 ===== */ 
 	
 	/* ** for anyone looking at the source, yes I leave in a lot of comments and print_r ;) ** */
 
@@ -75,7 +75,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 	
 
 
-$mctagmapVersionNumber = "17.0.34";
+$mctagmapVersionNumber = "17.0.35";
 $mctagmapCSSpath = $_SERVER['DOCUMENT_ROOT'].parse_url(get_stylesheet_directory_uri(), PHP_URL_PATH);
 $mctmarr = get_option('mctagmapoptions');
 
@@ -343,6 +343,7 @@ EOD;
 			}
 		}
 	} elseif($show_categories == "yes"){
+		$what = 'name';
 		if($child_of != ""){
 			$childof = array();
 			$childof = preg_replace('/\s+/', '', explode(',',$child_of));
@@ -364,6 +365,7 @@ EOD;
 			$tags = get_categories('order=ASC&hide_empty='.$show_empty.'');
 		}	
 	} elseif($show_pages == "yes"){
+		$what = 'post_title';
 		$page_child = 0;
 		if($child_of != ""){
 			$childofconv = array();
@@ -418,7 +420,7 @@ EOD;
 		}
 	} elseif($from_category && $show_posts != "yes"){
 		$tags = array();
-		
+		$what = 'post_title';
 		/* from cat */
 		$fromcat = preg_replace('/\s+/', '', explode(',',$from_category));
 		$posts_array = array();
@@ -448,6 +450,7 @@ EOD;
 			}
 		}
 	} elseif($show_posts == "yes"){
+		$what = 'post_title';
 		$type = array();
 		if($post_type && $post_type != "no"){
 			$pta = preg_replace('/\s+/', '', explode(',',$post_type));
@@ -557,6 +560,7 @@ EOD;
 		usort($tags, function ($a, $b) {
 			return strnatcasecmp($a->last_name, $b->last_name);
 		});
+		$what = 'display_name';
 	} elseif($multisite != ""){
 		$sites = get_sites();
 		$tags = array();
@@ -599,6 +603,7 @@ EOD;
 		//print_r($tags);
 	} else {
 		$tags = get_terms('post_tag', 'order=ASC&hide_empty='.$show_empty.''); 
+		$what = 'name';
 		//print_r($tags);
 
 	}
@@ -803,6 +808,7 @@ function mctm_hierarchical_term_tree($category = 0){
 	
 	$groups = array();
 	$has_name_divider = 0;
+	//print_r($tags);
 	if( $tags && is_array( $tags ) ) {
 		foreach( $tags as $tag ) {	
 			/* ===== exclude tags ===== */ 
@@ -811,14 +817,14 @@ function mctm_hierarchical_term_tree($category = 0){
 				$nd = explode(',',preg_replace('/\s*,\s*/', ',', $name_divider));
 				if ($name_divider != '') {
 					foreach($nd as $ndArray) {
-						if (stripos($tag->post_title, $ndArray) !== false){
-							$tag->$arraypart = preg_replace("/\s*([\\".$name_divider."])\s*/", "$1", $tag->post_title);
+						if (stripos($tag->$what, $ndArray) !== false){
+							$tag->$arraypart = preg_replace("/\s*([\\".$name_divider."])\s*/", "$1", $tag->$what);
 							$tagParts = explode($ndArray, $tag->$arraypart);
 							$tag->$arraypart = $tagParts[1].', '.$tagParts[0];
 							$has_name_divider = 1;
 						}
 					}
-				}			
+				}	
 				$td = explode(',',preg_replace('/\s*,\s*/', ',', $title_divider));
 				if ($title_divider != '') {
 					$fw = strtok($tag->$arraypart, ' ');
@@ -826,8 +832,9 @@ function mctm_hierarchical_term_tree($category = 0){
 						$tag->$arraypart = $tag->$arraypart;
 						//echo $tag->$arraypart.'<br>';
 						$tagParts = explode($fw, $tag->$arraypart);
+						//print_r($tagParts);
 						$tag->$arraypart = trim($tagParts[1].', '.$fw);
-						$tag->first_word = $fw;
+						//$tag->first_word = $fw;
 					}
 				}
 				if(function_exists('mb_strtoupper')) {
@@ -1317,7 +1324,7 @@ function mctm_hierarchical_term_tree($category = 0){
 				/* =====  exclude tags ===== */ 
 				if(isset($tag->$arraypart)){
 					/* =====  tag count ===== */ 
-					if($tag_count == "yes" && $show_pages != "yes" && $show_authors != "yes"){
+					if($tag_count == "yes" && $show_pages != "yes" && $show_posts != "yes" && $show_authors != "yes"){
 						$mctagmap_count = ' <span class="mctagmap_count">('.$tag->count.')</span>';
 					}
 					if($show_authors == "yes" && $tag_count == "yes"){
