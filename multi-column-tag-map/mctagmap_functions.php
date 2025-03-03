@@ -8,7 +8,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 
 ===== */ 
 	
-	/* =====  version 17.0.35 ===== */ 
+	/* =====  version 17.0.36 ===== */ 
 	
 	/* ** for anyone looking at the source, yes I leave in a lot of comments and print_r ;) ** */
 
@@ -75,7 +75,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 	
 
 
-$mctagmapVersionNumber = "17.0.35";
+$mctagmapVersionNumber = "17.0.36";
 $mctagmapCSSpath = $_SERVER['DOCUMENT_ROOT'].parse_url(get_stylesheet_directory_uri(), PHP_URL_PATH);
 $mctmarr = get_option('mctagmapoptions');
 
@@ -305,6 +305,7 @@ EOD;
 	
 	/* ===== set up what to get (tags, categories, etc...) ===== */ 
 	if($taxonomy){
+		$what = 'name';
 		$tags = array();
 		if($child_of != ""){
 			$childof = array();

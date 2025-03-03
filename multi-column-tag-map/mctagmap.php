@@ -3,7 +3,7 @@
 Plugin Name: Multi-column Tag Map
 Plugin URI: https://wordpress.org/plugins/multi-column-tag-map/
 Description: Displays posts, pages, tags, categories and more like a book index.
-Version: 17.0.35
+Version: 17.0.36
 Author: Alan Jackson
 Author URI: http://mctagmap.tugbucket.net
 License: GPL v2 or later
