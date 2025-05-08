@@ -8,7 +8,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 
 ===== */ 
 	
-	/* =====  version 17.0.36 ===== */ 
+	/* =====  version 17.0.37 ===== */ 
 	
 	/* ** for anyone looking at the source, yes I leave in a lot of comments and print_r ;) ** */
 
@@ -47,6 +47,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 		"post_tags" => "",
 		"minimum_count" => "0",
 		"multi_page" => "no",
+		"multi_page_ajax" => "no",
 		"class" => "",
 		"responsive" => "no",
 		"force_first" => "",
@@ -75,7 +76,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 	
 
 
-$mctagmapVersionNumber = "17.0.36";
+$mctagmapVersionNumber = "17.0.37";
 $mctagmapCSSpath = $_SERVER['DOCUMENT_ROOT'].parse_url(get_stylesheet_directory_uri(), PHP_URL_PATH);
 $mctmarr = get_option('mctagmapoptions');
 
@@ -238,6 +239,7 @@ $mctmarr = get_option('mctagmapoptions');
 					<dd>post_tags => '.$post_tags.'</dd>
 					<dd>minimum_count => '.$minimum_count.'</dd>
 					<dd>multi_page => '.$multi_page.'</dd>
+					<dd>multi_page_ajax => '.$multi_page_ajax.'</dd>
 					<dd>class => '.$class.'</dd>
 					<dd>responsive => '.$responsive.'</dd>
 					<dd>force_first => '.$force_first.'</dd>
@@ -608,7 +610,6 @@ EOD;
 		//print_r($tags);
 
 	}
-	
 	/* woo test */
 	/*
 	$args = array(
@@ -806,7 +807,6 @@ function mctm_hierarchical_term_tree($category = 0){
 		$length = sizeof($newStrings);
 	}
 	/* == translate stuff == */
-	
 	$groups = array();
 	$has_name_divider = 0;
 	//print_r($tags);
@@ -907,8 +907,9 @@ function mctm_hierarchical_term_tree($category = 0){
 			foreach($sagarr as $key => $val) {
 			   $sag2[$val[0]] = $val[1];
 			}
+
 			foreach($sag2 as $s2 => $val){
-				if(is_array($groups[$s2]) && is_array($groups[$val])){
+				if(isset($groups[$s2]) && is_array($groups[$s2]) && is_array($groups[$val])){
 					$groups[$s2] = array_merge($groups[$s2], $groups[$val]);
 					unset($groups[$val]);
 				}
@@ -1078,8 +1079,10 @@ function mctm_hierarchical_term_tree($category = 0){
 						$flc = ', '.$group_letter;
 					}
 				}
-				if($multi_page == "yes"){
+				if($multi_page == "yes" && $multi_page_ajax == "no"){
 					$list .= '<a href="?mctm-page='.mb_strtoupper($fl).'">'.$fl.$flc.'</a>'."\n";
+				} elseif($multi_page == "yes" && $multi_page_ajax == "yes"){
+					$list .= '<a href="#" data-letter="'.mb_strtoupper($fl).'" onclick="mctmGetGroup(this.dataset.letter); return false;">'.$fl.$flc.'</a>'."\n";
 				} else {
 					$list .= '<a href="#mctm-mctmcounter-'.mb_strtoupper($fl).'">'.$fl.$flc.'</a>'."\n";
 				}
@@ -1234,19 +1237,21 @@ function mctm_hierarchical_term_tree($category = 0){
 			$list .= '<ul class="links">';
 			$list .="\n";			
 			$i = 0;
-	
+
 			/* ===== this helps sort non-english characters ===== */ 
 			if($letter != $denote_numbers || is_numeric($letter)){ /* don't resort numbers */
 				if($show_pages == "yes" || $show_posts == "yes"){
 					if(strtoupper($order) == 'DESC'){
 						usort($tags, function ($b, $a) {
-							return strnatcasecmp($a->post_title, $b->post_title);
+							return strnatcasecmp(preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$a->post_title)), preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$b->post_title)));
+							
 						});
 					} else {
 						usort($tags, function ($a, $b) {
-							return strnatcasecmp($a->post_title, $b->post_title);
+							return strnatcasecmp(preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$a->post_title)), preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$b->post_title)));
 						});
 					}
+					/*
 					if($sort_alpha_groups != ''){
 						if(strtoupper($order) == 'DESC'){
 							usort($tags, function ($b,$a) {
@@ -1258,6 +1263,7 @@ function mctm_hierarchical_term_tree($category = 0){
 							});
 						}
 					}
+					*/
 				} elseif($show_authors == 'yes'){
 					if(strtoupper($order) == 'DESC'){
 						usort($tags, function ($b,$a) {
@@ -1282,11 +1288,15 @@ function mctm_hierarchical_term_tree($category = 0){
 				if($sort_alpha_groups != ''){
 					if(strtoupper($order) == 'DESC'){
 						usort($tags, function ($b,$a) {
-							return strnatcasecmp($a->slug, $b->slug);
+							if($a->slug ?? false){
+								return strnatcasecmp($a->slug, $b->slug);
+							}
 						});
 					} else {
 						usort($tags, function ($a,$b) {
-							return strnatcasecmp($a->slug, $b->slug);
+							if($a->slug ?? false){
+								return strnatcasecmp($a->slug, $b->slug);
+							}
 						});
 					}
 				}
@@ -1294,17 +1304,20 @@ function mctm_hierarchical_term_tree($category = 0){
 				if($has_name_divider && $sort_alpha_groups != ''){
 					if(strtoupper($order) == 'DESC'){
 						usort($tags, function ($b,$a) {
-							return strnatcasecmp($a->name, $b->name);
+							if($a->slug ?? false){
+								return strnatcasecmp($a->name, $b->name);
+							}
 						});
 					} else {
 						usort($tags, function ($a,$b) {
-							return strnatcasecmp($a->name, $b->name);
+							if($a->slug ?? false){
+								return strnatcasecmp($a->name, $b->name);
+							}
 						});
 					}
 				}
 			/* here */
 			} /* don't resort numbers */
-			//print_r($tags);
 			if($count_order != '' && $show_pages != "yes" && $show_posts != "yes"){
 				if(strtoupper($count_order) == 'ASC'){
 					if($show_authors == "yes"){
@@ -1811,7 +1824,7 @@ function mctm_hierarchical_term_tree($category = 0){
 	$list .= "</div> <!-- end hold inner -->"."\n";
 	$list .= "<div style='clear: both;'></div>"."\n"."</div><!-- end list -->";
 	}
-	else $list .= '<p>Sorry, but no tags were found</p>';
+	else $list .= '<p>Sorry, but no tags were found</p></div>';
 	
 	$mctmarr = get_option('mctagmapoptions');
 	if(isset($mctmarr['use_custom']) && $mctmarr['use_custom']=='yes'){
