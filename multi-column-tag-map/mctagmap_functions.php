@@ -8,7 +8,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 
 ===== */ 
 	
-	/* =====  version 17.0.37 ===== */ 
+	/* =====  version 17.0.38 ===== */ 
 	
 	/* ** for anyone looking at the source, yes I leave in a lot of comments and print_r ;) ** */
 
@@ -76,7 +76,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 	
 
 
-$mctagmapVersionNumber = "17.0.37";
+$mctagmapVersionNumber = "17.0.38";
 $mctagmapCSSpath = $_SERVER['DOCUMENT_ROOT'].parse_url(get_stylesheet_directory_uri(), PHP_URL_PATH);
 $mctmarr = get_option('mctagmapoptions');
 
@@ -1277,11 +1277,13 @@ function mctm_hierarchical_term_tree($category = 0){
 				} else {
 					if(strtoupper($order) == 'DESC'){
 						usort($tags, function ($b,$a) {
-							return strnatcasecmp($a->name, $b->name);
+							//return strnatcasecmp($a->name, $b->name);
+							return strnatcasecmp(preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$a->name)), preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$b->name)));
 						});
 					} else {
 						usort($tags, function ($a,$b) {
-							return strnatcasecmp($a->name, $b->name);
+							//return strnatcasecmp($a->name, $b->name);
+							return strnatcasecmp(preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$a->name)), preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$b->name)));
 						});
 					}						
 				}
