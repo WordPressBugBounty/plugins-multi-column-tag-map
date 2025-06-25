@@ -8,7 +8,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 
 ===== */ 
 	
-	/* =====  version 17.0.38 ===== */ 
+	/* =====  version 17.0.39 ===== */ 
 	
 	/* ** for anyone looking at the source, yes I leave in a lot of comments and print_r ;) ** */
 
@@ -72,11 +72,12 @@ file in the plugins folder, all your edits will be overwritten if you update.
 		"count_order" => '',
 		"multisite" => '',
 		"post_excerpt" => "no",
+		"title_divider_swap" => "yes",
 	), $atts));
 	
 
 
-$mctagmapVersionNumber = "17.0.38";
+$mctagmapVersionNumber = "17.0.39";
 $mctagmapCSSpath = $_SERVER['DOCUMENT_ROOT'].parse_url(get_stylesheet_directory_uri(), PHP_URL_PATH);
 $mctmarr = get_option('mctagmapoptions');
 
@@ -252,6 +253,7 @@ $mctmarr = get_option('mctagmapoptions');
 					<dd>author_avatar_linked => '.$author_avatar_linked.'</dd>
 					<dd>authors_sort_last => '.$authors_sort_last.'</dd>
 					<dd>title_divider => '.$title_divider.'</dd>
+					<dd>title_divider_swap => '.$title_divider_swap.'</dd>
 					<dd>order => '.$order.'</dd>
 					<dd>denote_numbers => '.$denote_numbers.'</dd>
 					<dd>numbers_first => '.$numbers_first.'</dd>
@@ -1307,13 +1309,13 @@ function mctm_hierarchical_term_tree($category = 0){
 					if(strtoupper($order) == 'DESC'){
 						usort($tags, function ($b,$a) {
 							if($a->slug ?? false){
-								return strnatcasecmp($a->name, $b->name);
+								return strnatcasecmp(preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$a->name)), preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$b->name)));
 							}
 						});
 					} else {
 						usort($tags, function ($a,$b) {
 							if($a->slug ?? false){
-								return strnatcasecmp($a->name, $b->name);
+								return strnatcasecmp(preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$a->name)), preg_replace("/[^A-Za-z0-9 ]/", '', iconv('UTF-8','ASCII//TRANSLIT',$b->name)));
 							}
 						});
 					}
@@ -1450,8 +1452,13 @@ function mctm_hierarchical_term_tree($category = 0){
 							$thumb2 = get_avatar($tag->ID, $avatar_size);
 						}
 					}
-					
-					
+					if($title_divider != '' && $title_divider_swap == "no"){
+						if( strpos($name, ',') !== false ) {
+							$name = explode(',',$name);
+							$name = $name[1].' '.$name[0];
+						}
+					}
+
 					/* =====  if hide = yes ===== */ 
 					if ($hide == "yes"){
 						$num2show = $num_show;

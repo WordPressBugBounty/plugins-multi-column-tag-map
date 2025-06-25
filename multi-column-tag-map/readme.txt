@@ -5,7 +5,7 @@ Tags: tag cloud, tags, taxonomies, tag cloud alternative
 Requires at least: 2.1
 Tested up to: 6.8.1
 Requires PHP: 5.6
-Stable tag: 17.0.38
+Stable tag: 17.0.39
 
 Multi-column Tag Map will display tags, pages, posts, categories, custom post types, authors and taxonomies in a visually logical way similiar to that of an index of a book.
 
@@ -75,6 +75,7 @@ Please note this is not something made for WooCommerce. It's simply pulling out 
 
 
 == Changelog ==
+* v17.0.39 - sort_alpha sorting and title_divider_swap
 * v17.0.38 - taxonomy sorting
 * v17.0.37 - more sorting changes and closing div properly
 * v17.0.36 - name_divider taxonomy fix

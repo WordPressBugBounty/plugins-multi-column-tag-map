@@ -7,7 +7,7 @@ file in the plugins folder, all your edits will be overwritten if you update.
 
 ===== */ 
 
-/* =====  version 17.0.38 ===== */ 
+/* =====  version 17.0.39 ===== */ 
 
 		/* multi_page_ajax */
 		function mctmGetGroup(letter){
